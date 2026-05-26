@@ -9,6 +9,11 @@ export function createApp(): express.Application {
   // Raw body required for HMAC validation; 1mb limit prevents payload-based OOM
   app.use(express.raw({ type: '*/*', limit: '1mb' }));
 
+  // Railway healthcheck endpoint
+  app.get('/healthz', (_req: express.Request, res: express.Response) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
   app.post(
     '/webhook/github',
     hmacMiddleware,
