@@ -34,9 +34,6 @@ COPY webhook-server/ ./webhook-server/
 RUN chown -R node:node /app
 USER node
 
-# Mount point for SQLite data (configure Railway Volume at /app/data)
-VOLUME ["/app/data"]
-
 EXPOSE 3001
 
 # Railway healthcheck endpoint
