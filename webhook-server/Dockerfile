@@ -30,15 +30,10 @@ RUN npm install -g @automagik/omni
 # Copy webhook-server source
 COPY webhook-server/ ./webhook-server/
 
-# Run as non-root; node user (uid 1000) is provided by the base image
-RUN chown -R node:node /app
-USER node
+# Ensure data directory is writable (Railway Volume mounts at /app/data)
+RUN mkdir -p /app/data && chmod 777 /app/data
 
 EXPOSE 3001
-
-# Railway healthcheck endpoint
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/healthz', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 # Run with tsx for direct TypeScript execution
 CMD ["./node_modules/.bin/tsx", "webhook-server/src/index.ts"]
