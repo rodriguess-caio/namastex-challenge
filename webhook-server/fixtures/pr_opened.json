@@ -1,0 +1,37 @@
+{
+  "action": "opened",
+  "number": 42,
+  "pull_request": {
+    "node_id": "PR_kwDOABCDEF12345678",
+    "title": "Add webhook support for GitHub events",
+    "html_url": "https://github.com/namastex/github-monitor/pull/42",
+    "merged": false,
+    "state": "open",
+    "user": {
+      "login": "octocat",
+      "id": 1
+    },
+    "body": "This PR adds webhook support for GitHub events.",
+    "created_at": "2026-05-26T10:00:00Z",
+    "updated_at": "2026-05-26T10:00:00Z",
+    "head": {
+      "ref": "feature/webhook-support",
+      "sha": "abc123def456"
+    },
+    "base": {
+      "ref": "main",
+      "sha": "def456abc123"
+    }
+  },
+  "repository": {
+    "id": 123456,
+    "name": "github-monitor",
+    "full_name": "namastex/github-monitor",
+    "private": false,
+    "html_url": "https://github.com/namastex/github-monitor"
+  },
+  "sender": {
+    "login": "octocat",
+    "id": 1
+  }
+}

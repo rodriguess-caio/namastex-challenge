@@ -1,0 +1,27 @@
+# Data / SQLite
+data/db.sqlite
+data/
+
+# Dependencies
+node_modules/
+webhook-server/node_modules/
+
+# Environment
+.env
+
+# ngrok binaries
+ngrok
+ngrok.exe
+
+# Build output
+dist/
+webhook-server/dist/
+db/*.js
+db/*.d.ts
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*

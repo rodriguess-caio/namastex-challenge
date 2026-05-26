@@ -1,0 +1,20 @@
+{
+  "name": "namastex-github-monitor",
+  "version": "1.0.0",
+  "description": "GitHub Monitor Agent — WhatsApp notifications via Genie + Omni",
+  "main": "db/client.js",
+  "scripts": {
+    "build:db": "tsc --project db/tsconfig.json",
+    "db:init": "tsx db/client.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/node": "^20.11.5",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

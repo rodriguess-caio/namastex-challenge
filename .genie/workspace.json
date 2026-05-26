@@ -1,0 +1,10 @@
+{
+  "name": "namastex-challenge",
+  "agents": {
+    "defaults": {}
+  },
+  "tmux": {
+    "socket": "genie"
+  },
+  "sdk": {}
+}

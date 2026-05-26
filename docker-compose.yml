@@ -1,0 +1,20 @@
+services:
+  webhook-server:
+    build:
+      context: .
+      dockerfile: webhook-server/Dockerfile
+    ports:
+      - "127.0.0.1:3001:3001"
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    command: ["http", "--url=${NGROK_DOMAIN}", "webhook-server:3001"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    depends_on:
+      - webhook-server
+    restart: unless-stopped
