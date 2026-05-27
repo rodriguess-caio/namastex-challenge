@@ -68,7 +68,7 @@ export function handleIssue(req: Request, res: Response): void {
   const result = insert.run('issues', `${action}:${eventId}`);
 
   if (result.changes > 0) {
-    notify(message);
+    void notify(message); // fire-and-forget: don't block HTTP response
   }
 
   res.status(200).json({ status: 'ok' });

@@ -1,8 +1,6 @@
-import { spawnSync } from 'child_process';
-
 const E164_RE = /^\+[1-9]\d{7,14}$/;
 
-export function notify(message: string): void {
+export async function notify(message: string): Promise<void> {
   const phone = process.env.NOTIFY_PHONE;
   const omniInstance = process.env.OMNI_INSTANCE;
   const omniApiUrl = process.env.OMNI_API_URL ?? 'http://localhost:8882';
@@ -23,29 +21,29 @@ export function notify(message: string): void {
     return;
   }
 
-  const payload = JSON.stringify({
+  const payload = {
     to: phone,
     text: message,
     ...(omniInstance ? { instanceId: omniInstance } : {}),
-  });
+  };
 
-  const result = spawnSync(
-    'curl',
-    [
-      '-s', '-S', '-X', 'POST',
-      `${omniApiUrl}/api/v2/messages/send`,
-      '-H', 'Content-Type: application/json',
-      '-H', `Authorization: Bearer ${omniApiKey}`,
-      '-d', payload,
-    ],
-    { encoding: 'utf8' },
-  );
+  try {
+    const response = await fetch(`${omniApiUrl}/api/v2/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${omniApiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
 
-  if (result.error) {
-    console.error('[notify] Failed to spawn curl:', result.error.message);
-  } else if (result.status !== 0) {
-    console.error('[notify] curl exited with status', result.status, result.stderr);
-  } else {
-    console.log('[notify] Omni response:', result.stdout);
+    if (!response.ok) {
+      const body = await response.text();
+      console.error('[notify] Omni returned', response.status, body);
+    } else {
+      console.log('[notify] Message sent successfully');
+    }
+  } catch (err) {
+    console.error('[notify] Failed to send message:', err instanceof Error ? err.message : String(err));
   }
 }
