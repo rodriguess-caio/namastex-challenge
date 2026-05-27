@@ -276,8 +276,7 @@ notified_events (id, event_type, github_event_id, notified_at)  -- UNIQUE(event_
 Definição completa do agente `github-monitor`:
 - **System prompt** com capacidades, exemplos de comandos e diretrizes comportamentais
 - **GitHub MCP Tools**: `list_pull_requests`, `list_issues`, `get_issue`, `search_issues`
-- **GitHub Actions Agent Tools**: consulta de workflows, runs, logs e artifacts via Bash/curl na API do GitHub
-- **GitHub Actions Agent Tools**: consulta workflows (`list_workflows`), runs (`list_workflow_runs`), detalhes (`get_workflow_run`), logs (`get_job_logs`) e artifacts via Bash/curl
+- **GitHub Actions Agent Tools**: consulta workflows (`list_workflows`), runs (`list_workflow_runs`), detalhes (`get_workflow_run`), logs (`get_job_logs`) e artifacts via Bash/curl na API do GitHub
 - **Comandos de subscrição**: SQLite via CLI com validação de input anti-SQL injection
 - **Comportamento**: respostas no idioma do usuário (PT/EN), conciso e amigável
 
