@@ -363,7 +363,7 @@ Toda execução de comando (`sqlite3`) usa arrays de argumentos em vez de templa
 
 ### ⚠️ Importante: use o Genie local corrigido
 
-O Genie global (`genie serve start`) tem um bug crítico: o `tmux send-keys` trunca comandos acima de ~1968 caracteres, corrompendo o spawn do agente. O **Genie local corrigido** resolve isso escrevendo o comando em um arquivo temporário e executando via `source`.
+O Genie global (`genie serve start`) tem um bug crítico: o `tmux send-keys` trunca comandos acima de ~1968 caracteres, corrompendo o spawn do agente. O **Genie local corrigido** resolve isso escrevendo o comando em um arquivo temporário e executando via `source`. O bug foi reportado em [automagik-dev/genie#2486](https://github.com/automagik-dev/genie/issues/2486) e o fix está em revisão via [automagik-dev/genie#2489](https://github.com/automagik-dev/genie/pull/2489).
 
 ```bash
 # Build do Genie local
