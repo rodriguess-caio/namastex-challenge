@@ -13,6 +13,7 @@
       "Bash(omni say *)",
       "Bash(omni send *)",
       "Bash(omni done)",
+      "Bash(omni done *)",
       "Bash(omni react *)",
       "Bash(omni speak *)",
       "Bash(omni imagine *)",
