@@ -139,7 +139,6 @@ namastex-challenge/
 ├── package.json                 # Dependências raiz (better-sqlite3, tsx, TS)
 ├── tsconfig.json                # Config TypeScript raiz (ES2022, strict)
 ├── railway.json                 # Config de deploy no Railway
-├── AGENTS.md                    # Definição legada do agente (deprecated)
 ├── CLAUDE.md                    # Documentação técnica do projeto para LLMs
 ├── ISSUE_GENIE_OMNI_BRIDGE.md   # Bug report: tmux send-keys truncation
 ├── RAILWAY_DEPLOY.md            # Guia de deploy no Railway
@@ -440,10 +439,3 @@ Os testes usam mocks para `notify()` e `db.client`, evitando dependências exter
 
 ---
 
-## Melhorias Futuras
-
-- **Suporte multi-usuário**: substituir `NOTIFY_PHONE` único por tabela de usuários
-- **Eventos de CI**: suporte a `workflow_run` e `check_suite` para notificar sobre falhas em pipelines
-- **Dashboard web**: interface para gerenciar subscrições e visualizar histórico
-- **Cache de respostas**: evitar consultas repetidas ao GitHub MCP para perguntas frequentes
-- **Testes de integração**: testes end-to-end com Genie + Omni em ambiente controlado
