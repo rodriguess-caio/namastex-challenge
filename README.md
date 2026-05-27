@@ -188,6 +188,16 @@ Omni ──── roteia para Genie ──── github-monitor agent (Claude Co
 | `parar de monitorar owner/repo` | `DELETE FROM monitored_repos` |
 | `listar repos monitorados` | `SELECT owner || '/' || repo FROM monitored_repos` |
 
+**Comandos de GitHub Actions** (consulta via GitHub API + `curl`):
+
+| Comando do usuário | Ação do agente |
+|---|---|
+| `mostra os workflows de owner/repo` | `GET /repos/{owner}/{repo}/actions/workflows` |
+| `status das actions de owner/repo` | `GET /repos/{owner}/{repo}/actions/runs?per_page=10` |
+| `detalhes da run {run_id}` | `GET /repos/{owner}/{repo}/actions/runs/{run_id}` |
+| `logs do job {job_id}` | `GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs` |
+| `artifacts da run {run_id}` | `GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts` |
+
 > O agente valida `owner` e `repo` com regex `^[a-zA-Z0-9_.-]+$` antes de executar qualquer SQL, prevenindo SQL injection via prompt injection.
 
 ### Fluxo Proativo (notificação do GitHub)
@@ -379,7 +389,7 @@ nohup bun <path-do-genie-local>/dist/genie.js serve start --headless > /tmp/geni
 
 ```bash
 # 1. Clone e entre no diretório
-git clone <seu-repo-url> namastex-challenge
+git clone https://github.com/rodriguess-caio/namastex-challenge.git namastex-challenge
 cd namastex-challenge
 
 # 2. Configure as variáveis de ambiente
