@@ -1,6 +1,6 @@
 # namastex-challenge — GitHub Monitor Agent
 
-Agente conversacional no WhatsApp que monitora repositórios GitHub e notifica em tempo real sobre Pull Requests e Issues. Construído com [Genie](https://github.com/automagik-dev/genie) como orquestrador de agente e [Omni](https://github.com/automagik-dev/omni) como bridge omnichannel.
+Agente conversacional no WhatsApp que monitora repositórios GitHub e notifica em tempo real sobre Pull Requests, Issues e GitHub Actions workflows. Construído com [Genie](https://github.com/automagik-dev/genie) como orquestrador de agente e [Omni](https://github.com/automagik-dev/omni) como bridge omnichannel.
 
 ---
 
@@ -59,7 +59,7 @@ O sistema opera em **dois fluxos independentes**:
 
 | Fluxo | Gatilho | Descrição |
 |-------|---------|-----------|
-| **Reativo** | Usuário envia mensagem no WhatsApp | Consulta sobre PRs/issues via GitHub MCP |
+| **Reativo** | Usuário envia mensagem no WhatsApp | Consulta sobre PRs, Issues e Actions via GitHub MCP e agent tools |
 | **Proativo** | GitHub envia webhook | Notificação automática de eventos no WhatsApp |
 
 ---
@@ -70,7 +70,7 @@ O sistema opera em **dois fluxos independentes**:
 |--------|-----------|--------|
 | **Orquestrador** | [Genie](https://github.com/automagik-dev/genie) | Gerencia agente Claude Code, sessões, memória e comunicação |
 | **Bridge** | [Omni](https://github.com/automagik-dev/omni) | Conecta WhatsApp ↔ Genie (omnichannel) |
-| **Agente** | Claude Code + TypeScript | Lógica do agente, ferramentas MCP e comandos de subscrição |
+| **Agente** | Claude Code + TypeScript | Lógica do agente, ferramentas MCP, agent tools (Bash/curl) e comandos de subscrição |
 | **Webhook Server** | Express + TypeScript | Recebe eventos do GitHub, valida e notifica |
 | **Banco de Dados** | SQLite (better-sqlite3) | Subscrições de repositórios + dedup de eventos |
 | **Infraestrutura** | Docker + docker-compose | Containeriza webhook server + ngrok |
@@ -271,6 +271,8 @@ notified_events (id, event_type, github_event_id, notified_at)  -- UNIQUE(event_
 Definição completa do agente `github-monitor`:
 - **System prompt** com capacidades, exemplos de comandos e diretrizes comportamentais
 - **GitHub MCP Tools**: `list_pull_requests`, `list_issues`, `get_issue`, `search_issues`
+- **GitHub Actions Agent Tools**: consulta de workflows, runs, logs e artifacts via Bash/curl na API do GitHub
+- **GitHub Actions Agent Tools**: consulta workflows (`list_workflows`), runs (`list_workflow_runs`), detalhes (`get_workflow_run`), logs (`get_job_logs`) e artifacts via Bash/curl
 - **Comandos de subscrição**: SQLite via CLI com validação de input anti-SQL injection
 - **Comportamento**: respostas no idioma do usuário (PT/EN), conciso e amigável
 
@@ -422,6 +424,8 @@ O projeto inclui [`RAILWAY_DEPLOY.md`](./RAILWAY_DEPLOY.md) com instruções com
 
 Envie uma mensagem no WhatsApp para o número conectado:
 - `listar PRs abertos de owner/repo`
+- `mostra os workflows de owner/repo`
+- `status das actions de owner/repo`
 - `monitorar owner/repo`
 - `quais repos estou monitorando`
 
