@@ -285,7 +285,7 @@ Definição completa do agente `github-monitor`:
 
 ```yaml
 services:
-  webhook-server:   # Node 20, compilação multi-estágio com better-sqlite3
+  webhook-server:   # Node 20, better-sqlite3 com build tools (python3/make/g++)
   ngrok:            # Túnel com domínio fixo para URL de webhook estável
 ```
 

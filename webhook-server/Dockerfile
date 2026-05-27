@@ -24,9 +24,6 @@ COPY webhook-server/package.json webhook-server/package-lock.json* ./webhook-ser
 # Install webhook-server dependencies
 RUN npm ci --prefix webhook-server
 
-# Install omni CLI globally (used by notify.ts to send WhatsApp messages)
-RUN npm install -g @automagik/omni
-
 # Copy webhook-server source
 COPY webhook-server/ ./webhook-server/
 
