@@ -15,8 +15,6 @@ Agente conversacional no WhatsApp que monitora repositórios GitHub e notifica e
 - [Segurança](#segurança)
 - [Setup e Execução](#setup-e-execução)
 - [Testes](#testes)
-- [Melhorias Futuras](#melhorias-futuras)
-
 ---
 
 ## Arquitetura
@@ -88,9 +86,6 @@ namastex-challenge/
 │
 ├── .claude/
 │   └── settings.json            # Config MCP GitHub + permissões do Claude
-│
-├── .genie/
-│   └── workspace.json            # Workspace Genie
 │
 ├── agents/
 │   └── github-monitor/
@@ -327,6 +322,9 @@ O middleware HMAC precisa dos bytes brutos do corpo da requisição para calcula
 
 ### Dedup atômico com `INSERT OR IGNORE`
 A combinação `UNIQUE(event_type, github_event_id)` + `INSERT OR IGNORE` torna a deduplicação uma operação atômica a nível de banco. Não há race condition entre "verificar se existe" e "inserir" — o próprio banco rejeita o duplicado.
+
+### Memória e contexto entre mensagens
+O Genie mantém um `claude_session_id` persistente por chat no banco de dados. A cada novo turno, o agente é spawnado com `--session-id <uuid>` apontando para o mesmo arquivo JSONL, preservando o histórico completo da conversa. Não há perda de contexto entre mensagens do mesmo usuário, mesmo após reinicializações do servidor.
 
 ### WAL mode no SQLite
 Necessário porque dois processos diferentes (webhook server e agente Genie) podem acessar o mesmo banco. WAL permite leituras concorrentes sem bloquear escritas.
