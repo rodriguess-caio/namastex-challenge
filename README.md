@@ -74,7 +74,8 @@ O sistema opera em **dois fluxos independentes**:
 | **Webhook Server** | Express + TypeScript | Recebe eventos do GitHub, valida e notifica |
 | **Banco de Dados** | SQLite (better-sqlite3) | Subscrições de repositórios + dedup de eventos |
 | **Infraestrutura** | Docker + docker-compose | Containeriza webhook server + ngrok |
-| **Túnel** | ngrok | Expõe webhook server local para GitHub |
+| **Túnel** | ngrok / LocalTunnel | Expõe webhook server e Omni local para internet |
+| **Deploy** | Railway | Hospeda webhook server com URL fixa |
 | **MCP** | `@github/mcp-server` | Ferramentas para consultar dados do GitHub |
 | **Testes** | Jest + Supertest | Testes de integração do webhook server |
 
@@ -89,19 +90,25 @@ namastex-challenge/
 │   └── settings.json            # Config MCP GitHub + permissões do Claude
 │
 ├── .genie/
-│   ├── workspace.json            # Workspace Genie
-│   └── brainstorms/             # Design docs do agente
-│
-├── agent/
-│   └── .claude/settings.json    # Config do agente Genie (MCP + permissões)
+│   └── workspace.json            # Workspace Genie
 │
 ├── agents/
-│   └── github-monitor/          # Definição do agente (AGENTS.md, SOUL.md, etc.)
+│   └── github-monitor/
+│       ├── AGENTS.md            # System prompt + comandos do agente
+│       └── .claude/
+│           └── settings.json    # Config do agente (MCP + permissões)
+│
+├── data/
+│   ├── db.sqlite                # Banco SQLite (WAL mode)
+│   ├── db.sqlite-shm            # Shared memory (WAL)
+│   └── db.sqlite-wal            # Write-ahead log
 │
 ├── db/
 │   ├── client.ts                # Singleton better-sqlite3 + init automático
 │   ├── schema.ts                # Schema: monitored_repos + notified_events
 │   └── tsconfig.json            # Config TS específica do db
+│
+├── dist/                        # Build output (TypeScript compilado)
 │
 ├── scripts/
 │   ├── setup.sh                 # Validação de env + registro de webhook no GitHub
@@ -111,12 +118,13 @@ namastex-challenge/
 ├── webhook-server/
 │   ├── Dockerfile               # Imagem Docker do servidor webhook
 │   ├── package.json             # Dependências (Express, Jest, Supertest)
+│   ├── tsconfig.json            # Config TS do webhook server
 │   ├── fixtures/
 │   │   ├── pr_opened.json       # Fixture de teste: PR aberto
 │   │   └── issue_opened.json    # Fixture de teste: Issue aberta
 │   └── src/
 │       ├── index.ts             # App Express (factory + server)
-│       ├── notify.ts            # Wrapper do CLI omni send
+│       ├── notify.ts            # Chama API v2 do Omni via fetch nativo
 │       ├── middleware/
 │       │   └── hmac.ts          # Validação HMAC-SHA256 com timingSafeEqual
 │       ├── handlers/
@@ -126,11 +134,17 @@ namastex-challenge/
 │           └── handlers.test.ts # 8 testes de integração
 │
 ├── docker-compose.yml           # Serviços: webhook-server + ngrok
+├── .env                         # Variáveis de ambiente (não commitar)
 ├── .env.example                 # Template de variáveis de ambiente
-├── AGENTS.md                    # System prompt + comandos do agente github-monitor
-├── CLAUDE.md                    # Documentação técnica do projeto para LLMs
 ├── package.json                 # Dependências raiz (better-sqlite3, tsx, TS)
-└── tsconfig.json                # Config TypeScript raiz (ES2022, strict)
+├── tsconfig.json                # Config TypeScript raiz (ES2022, strict)
+├── railway.json                 # Config de deploy no Railway
+├── AGENTS.md                    # Definição legada do agente (deprecated)
+├── CLAUDE.md                    # Documentação técnica do projeto para LLMs
+├── ISSUE_GENIE_OMNI_BRIDGE.md   # Bug report: tmux send-keys truncation
+├── RAILWAY_DEPLOY.md            # Guia de deploy no Railway
+├── SETUP_LOCAL.md               # Guia completo de setup local
+└── README.md                    # Este arquivo
 ```
 
 ---
@@ -234,9 +248,9 @@ Servidor Express que escuta na porta `3001` e processa eventos do GitHub.
 
 **Serviço de Notificação** (`notify.ts`):
 - Valida `NOTIFY_PHONE` no formato E.164 (`^\+[1-9]\d{7,14}$`)
-- Executa `omni send --to <phone> --text <message>` via `spawnSync`
+- Chama a **API v2 do Omni** diretamente via `fetch` nativo do Node.js (`POST /api/v2/messages/send`)
 - Suporta `OMNI_INSTANCE` opcional para multi-instância
-- Usa arrays de argumentos (nunca template strings) para prevenir command injection
+- **Fire-and-forget**: não bloqueia a resposta HTTP do webhook (evita timeout 499)
 
 ### 2. Camada de Dados (`db/`)
 
@@ -309,8 +323,11 @@ Necessário porque dois processos diferentes (webhook server e agente Genie) pod
 ### Type guards para validação de payload
 Em vez de acessar `payload.issue.title` diretamente (que lançaria TypeError se `issue` for undefined), cada handler tem uma função `isValidPayload()` que verifica toda a estrutura do payload antes do acesso. Isso previne crashes com payloads malformados.
 
+### API v2 do Omni em vez de CLI `omni send`
+O CLI `omni send` usa o endpoint legado `/api/messages/send` que retorna 404 na versão atual do Omni. A notificação agora chama a API v2 diretamente via `fetch` nativo do Node.js, sem depender de binários externos (`curl`, `omni`).
+
 ### `spawnSync` com arrays (nunca `shell: true`)
-Toda execução de comando (`omni send`, `sqlite3`) usa arrays de argumentos em vez de template strings. Isso elimina o risco de command injection mesmo se o conteúdo da mensagem contiver caracteres especiais.
+Toda execução de comando (`sqlite3`) usa arrays de argumentos em vez de template strings. Isso elimina o risco de command injection mesmo se o conteúdo da mensagem contiver caracteres especiais.
 
 ---
 
@@ -329,16 +346,35 @@ Toda execução de comando (`omni send`, `sqlite3`) usa arrays de argumentos em 
 
 ## Setup e Execução
 
+> 📖 **Guia completo passo a passo:** veja [`SETUP_LOCAL.md`](./SETUP_LOCAL.md) para instruções detalhadas de setup local (Omni + Genie + Webhook Server + LocalTunnel).
+
 ### Pré-requisitos
 
 - Node.js 20+
-- Docker + docker-compose (para execução containerizada)
-- Genie CLI (`npm install -g @automagik/genie`)
+- Bun 1.3+ (para build do Genie local corrigido)
+- Docker + docker-compose (opcional, para execução containerizada)
+- Genie CLI global (`npm install -g @automagik/genie`)
+- **Genie local corrigido** (clone de `github.com/automagik-dev/genie` com fix do `tmux send-keys`)
 - Omni CLI + instância WhatsApp conectada
-- ngrok account + authtoken
-- GitHub token com escopos `repo` e `admin:repo_hook`
+- ngrok account + authtoken (ou LocalTunnel)
+- GitHub token com escopo `repo`
+- `gh` CLI autenticado (para gerenciar webhooks)
 
-### Passo a passo
+### ⚠️ Importante: use o Genie local corrigido
+
+O Genie global (`genie serve start`) tem um bug crítico: o `tmux send-keys` trunca comandos acima de ~1968 caracteres, corrompendo o spawn do agente. O **Genie local corrigido** resolve isso escrevendo o comando em um arquivo temporário e executando via `source`.
+
+```bash
+# Build do Genie local
+cd <path-do-genie-local>
+bun run build
+
+# Iniciar no projeto
+cd <path-do-projeto>
+nohup bun <path-do-genie-local>/dist/genie.js serve start --headless > /tmp/genie.log 2>&1 &
+```
+
+### Opção 1: Setup Local (desenvolvimento)
 
 ```bash
 # 1. Clone e entre no diretório
@@ -347,7 +383,7 @@ cd namastex-challenge
 
 # 2. Configure as variáveis de ambiente
 cp .env.example .env
-# Edite .env com seus valores (GITHUB_TOKEN, NGROK_DOMAIN, etc.)
+# Edite .env com seus valores (GITHUB_TOKEN, NOTIFY_PHONE, OMNI_*, etc.)
 
 # 3. Instale as dependências
 npm install
@@ -364,16 +400,24 @@ omni qr <instance>   # Escaneie o QR code com WhatsApp
 # 6. Registre o agente no Genie
 ./scripts/register-agent.sh
 
-# 7. Execute o setup (valida env + registra webhook no GitHub)
-./scripts/setup.sh
-
-# 8. Inicie os serviços (webhook + ngrok)
-docker-compose up -d
-
-# OU em modo dev:
+# 7. Inicie o webhook server
 npm run dev --prefix webhook-server
-ngrok http --domain=seu-dominio.ngrok-free.app 3001
+
+# 8. Exponha o Omni para o Railway (ou webhook para GitHub)
+nohup lt --port 8882 > /tmp/lt-omni.log 2>&1 &
+cat /tmp/lt-omni.log   # Copie a URL para OMNI_API_URL no Railway
 ```
+
+### Opção 2: Deploy no Railway (produção)
+
+O projeto inclui [`RAILWAY_DEPLOY.md`](./RAILWAY_DEPLOY.md) com instruções completas. Resumo:
+
+1. Conecte o repo ao Railway (deploy automático em push para `main`)
+2. Configure as variáveis de ambiente no Railway dashboard:
+   - `GITHUB_TOKEN`, `GITHUB_WEBHOOK_SECRET`, `NOTIFY_PHONE`
+   - `OMNI_API_URL` = URL do LocalTunnel/ngrok do Omni local
+   - `OMNI_API_KEY`, `OMNI_INSTANCE`
+3. Registre o webhook no GitHub apontando para `https://<seu-app>.up.railway.app/webhook/github`
 
 ### Verificação
 
@@ -381,6 +425,8 @@ Envie uma mensagem no WhatsApp para o número conectado:
 - `listar PRs abertos de owner/repo`
 - `monitorar owner/repo`
 - `quais repos estou monitorando`
+
+Para testar notificações proativas, crie ou feche uma issue/PR no repo monitorado.
 
 ---
 
