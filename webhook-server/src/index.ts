@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { hmacMiddleware } from './middleware/hmac';
 import { handlePullRequest } from './handlers/pull-request';

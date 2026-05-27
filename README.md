@@ -131,7 +131,7 @@ namastex-challenge/
 │       │   ├── pull-request.ts  # Handler de eventos de PR
 │       │   └── issue.ts         # Handler de eventos de Issue
 │       └── __tests__/
-│           └── handlers.test.ts # 8 testes de integração
+│           └── handlers.test.ts # 9 testes de integração
 │
 ├── docker-compose.yml           # Serviços: webhook-server + ngrok
 ├── .env                         # Variáveis de ambiente (não commitar)

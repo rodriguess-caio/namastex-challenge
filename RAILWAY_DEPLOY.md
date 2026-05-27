@@ -127,7 +127,7 @@ curl -X POST https://api.github.com/repos/OWNER/REPO/hooks \
 omni start
 
 # Conecta WhatsApp (escaneie o QR code)
-omni qc <instance>
+omni qr <instance>
 
 # Conecta Omni ao agente Genie
 omni connect github-monitor
